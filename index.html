@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>温泉クイズ200問</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:sans-serif;background:#fff7ed;color:#222}
+header{background:#ea580c;color:white;text-align:center;padding:20px;font-size:32px;font-weight:bold}
+.layout{display:flex;justify-content:center;gap:20px;padding:20px}
+.ad-side{width:160px;min-height:600px;background:white;border-radius:14px;box-shadow:0 4px 12px #0002;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;color:#777}
+.main{width:720px}
+.quiz-box,.bottom-ad,.final{background:white;border-radius:20px;padding:30px;box-shadow:0 8px 20px #0002;text-align:center}
+.bottom-ad{height:120px;margin-top:25px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#777;font-weight:bold}
+.top-info{display:flex;justify-content:space-between;font-size:18px;font-weight:bold}
+.question{font-size:30px;font-weight:bold;margin:30px 0;line-height:1.5}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.choices button{border:none;border-radius:14px;padding:18px;font-size:18px;cursor:pointer;background:#fed7aa;font-weight:bold}
+.choices button:hover{background:#fdba74;transform:scale(1.03)}
+.correct{background:#22c55e!important;color:white}
+.wrong{background:#ef4444!important;color:white}
+.result{margin-top:25px;font-size:24px;font-weight:bold;min-height:40px}
+.final{display:none}
+.restart-btn{border:none;background:#ea580c;color:white;padding:16px 30px;border-radius:12px;font-size:20px;cursor:pointer}
+@media(max-width:1000px){
+.layout{flex-direction:column}
+.ad-side{width:100%;min-height:100px}
+.main{width:100%}
+.choices{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>温泉クイズ200問</header>
+
+<div class="layout">
+  <div class="ad-side">広告エリア</div>
+
+  <div class="main">
+    <div class="quiz-box" id="quizBox">
+      <div class="top-info">
+        <div>問題 <span id="questionNum">1</span>/30</div>
+        <div>スコア: <span id="score">0</span></div>
+      </div>
+
+      <div class="question" id="question"></div>
+      <div class="choices" id="choices"></div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <div class="final" id="finalScreen">
+      <h2>クイズ終了！</h2>
+      <div class="score" id="finalScore"></div>
+      <button class="restart-btn" onclick="restartQuiz()">もう一度遊ぶ</button>
+    </div>
+
+    <div class="bottom-ad">広告エリア</div>
+  </div>
+
+  <div class="ad-side">広告エリア</div>
+</div>
+
+<script>
+const onsens = [
+{n:"草津温泉",p:"群馬県",f:"湯畑",t:"強い酸性泉"},
+{n:"箱根温泉",p:"神奈川県",f:"都心から近い人気温泉地",t:"多彩な泉質"},
+{n:"別府温泉",p:"大分県",f:"地獄めぐり",t:"源泉数が多い"},
+{n:"由布院温泉",p:"大分県",f:"金鱗湖",t:"自然と街歩き"},
+{n:"道後温泉",p:"愛媛県",f:"道後温泉本館",t:"歴史ある温泉"},
+{n:"有馬温泉",p:"兵庫県",f:"金泉・銀泉",t:"関西の名湯"},
+{n:"下呂温泉",p:"岐阜県",f:"日本三名泉の一つ",t:"なめらかな湯"},
+{n:"伊香保温泉",p:"群馬県",f:"石段街",t:"黄金の湯"},
+{n:"熱海温泉",p:"静岡県",f:"海沿いの温泉街",t:"リゾート温泉"},
+{n:"鬼怒川温泉",p:"栃木県",f:"渓谷沿いの温泉",t:"大型旅館が多い"},
+{n:"湯布院温泉",p:"大分県",f:"由布岳",t:"女性人気が高い"},
+{n:"登別温泉",p:"北海道",f:"地獄谷",t:"多種類の泉質"},
+{n:"定山渓温泉",p:"北海道",f:"札幌の奥座敷",t:"渓谷の温泉"},
+{n:"洞爺湖温泉",p:"北海道",f:"洞爺湖",t:"湖畔の温泉"},
+{n:"酸ヶ湯温泉",p:"青森県",f:"ヒバ千人風呂",t:"強酸性の湯"},
+{n:"花巻温泉",p:"岩手県",f:"宮沢賢治ゆかり",t:"東北の温泉郷"},
+{n:"鳴子温泉",p:"宮城県",f:"こけし",t:"泉質の種類が豊富"},
+{n:"秋保温泉",p:"宮城県",f:"仙台の奥座敷",t:"アクセスが良い"},
+{n:"銀山温泉",p:"山形県",f:"大正ロマンの街並み",t:"雪景色が人気"},
+{n:"蔵王温泉",p:"山形県",f:"樹氷",t:"強酸性硫黄泉"},
+{n:"飯坂温泉",p:"福島県",f:"共同浴場",t:"歴史ある湯治場"},
+{n:"東山温泉",p:"福島県",f:"会津若松近く",t:"会津の名湯"},
+{n:"那須温泉",p:"栃木県",f:"鹿の湯",t:"高原温泉"},
+{n:"四万温泉",p:"群馬県",f:"四万ブルー",t:"静かな温泉街"},
+{n:"水上温泉",p:"群馬県",f:"谷川岳",t:"アウトドアも人気"},
+{n:"越後湯沢温泉",p:"新潟県",f:"スキー場が近い",t:"駅近温泉"},
+{n:"月岡温泉",p:"新潟県",f:"美人の湯",t:"硫黄の香り"},
+{n:"宇奈月温泉",p:"富山県",f:"黒部峡谷",t:"透明度の高い湯"},
+{n:"和倉温泉",p:"石川県",f:"七尾湾",t:"海沿いの名湯"},
+{n:"山代温泉",p:"石川県",f:"加賀温泉郷",t:"古総湯"},
+{n:"山中温泉",p:"石川県",f:"鶴仙渓",t:"渓谷美"},
+{n:"芦原温泉",p:"福井県",f:"関西の奥座敷",t:"旅館街"},
+{n:"石和温泉",p:"山梨県",f:"ぶどう畑が近い",t:"首都圏から近い"},
+{n:"昼神温泉",p:"長野県",f:"星空",t:"美肌の湯"},
+{n:"野沢温泉",p:"長野県",f:"外湯めぐり",t:"スキーと温泉"},
+{n:"渋温泉",p:"長野県",f:"九湯めぐり",t:"石畳の温泉街"},
+{n:"白骨温泉",p:"長野県",f:"乳白色の湯",t:"秘湯感"},
+{n:"修善寺温泉",p:"静岡県",f:"竹林の小径",t:"伊豆最古級の温泉"},
+{n:"伊東温泉",p:"静岡県",f:"海と温泉",t:"湯量が豊富"},
+{n:"舘山寺温泉",p:"静岡県",f:"浜名湖",t:"湖畔の温泉"},
+{n:"奥飛騨温泉郷",p:"岐阜県",f:"新穂高ロープウェイ",t:"露天風呂が人気"},
+{n:"長島温泉",p:"三重県",f:"ナガシマスパーランド",t:"大型リゾート"},
+{n:"城崎温泉",p:"兵庫県",f:"外湯めぐり",t:"浴衣で街歩き"},
+{n:"白浜温泉",p:"和歌山県",f:"白良浜",t:"海辺の温泉"},
+{n:"皆生温泉",p:"鳥取県",f:"日本海沿い",t:"海水浴も人気"},
+{n:"玉造温泉",p:"島根県",f:"美肌の湯",t:"出雲観光と相性が良い"},
+{n:"湯原温泉",p:"岡山県",f:"砂湯",t:"露天風呂"},
+{n:"三朝温泉",p:"鳥取県",f:"ラジウム泉",t:"湯治場"},
+{n:"雲仙温泉",p:"長崎県",f:"雲仙地獄",t:"硫黄泉"},
+{n:"黒川温泉",p:"熊本県",f:"入湯手形",t:"露天風呂めぐり"}
+];
+
+function shuffle(array){
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function makeChoices(correct,pool){
+  const wrongs = shuffle(pool.filter(x => x !== correct)).slice(0,3);
+  return shuffle([correct,...wrongs]);
+}
+
+const onsenNames = onsens.map(x=>x.n);
+const prefs = [...new Set(onsens.map(x=>x.p))];
+const features = onsens.map(x=>x.f);
+const types = onsens.map(x=>x.t);
+
+let quizData = [];
+
+onsens.forEach(item=>{
+  quizData.push({
+    q:`${item.n}がある都道府県は？`,
+    a:item.p,
+    c:makeChoices(item.p,prefs)
+  });
+
+  quizData.push({
+    q:`${item.p}にある温泉地はどれ？`,
+    a:item.n,
+    c:makeChoices(item.n,onsenNames)
+  });
+
+  quizData.push({
+    q:`「${item.f}」で有名な温泉地は？`,
+    a:item.n,
+    c:makeChoices(item.n,onsenNames)
+  });
+
+  quizData.push({
+    q:`${item.n}の特徴として近いものは？`,
+    a:item.t,
+    c:makeChoices(item.t,types)
+  });
+});
+
+quizData = quizData.slice(0,200);
+
+let currentQuestion = 0;
+let score = 0;
+const totalQuestions = 30;
+let shuffledQuiz = [];
+
+function startQuiz(){
+  shuffledQuiz = shuffle([...quizData]).slice(0,totalQuestions);
+  currentQuestion = 0;
+  score = 0;
+  document.getElementById("score").textContent = score;
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = shuffledQuiz[currentQuestion];
+
+  document.getElementById("questionNum").textContent = currentQuestion + 1;
+  document.getElementById("question").textContent = q.q;
+  document.getElementById("result").textContent = "";
+
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
+
+  shuffle([...q.c]).forEach(choice=>{
+    const btn = document.createElement("button");
+    btn.textContent = choice;
+    btn.onclick = () => checkAnswer(btn,choice,q.a);
+    choicesDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(button,selected,correct){
+  const buttons = document.querySelectorAll(".choices button");
+
+  buttons.forEach(btn=>{
+    btn.disabled = true;
+    if(btn.textContent === correct){
+      btn.classList.add("correct");
+    }
+  });
+
+  if(selected === correct){
+    score++;
+    document.getElementById("score").textContent = score;
+    document.getElementById("result").textContent = "正解！";
+    button.classList.add("correct");
+  }else{
+    document.getElementById("result").textContent = "不正解！ 正解は " + correct;
+    button.classList.add("wrong");
+  }
+
+  setTimeout(()=>{
+    currentQuestion++;
+
+    if(currentQuestion < totalQuestions){
+      showQuestion();
+    }else{
+      showFinal();
+    }
+  },1200);
+}
+
+function showFinal(){
+  document.getElementById("quizBox").style.display = "none";
+  document.getElementById("finalScreen").style.display = "block";
+  document.getElementById("finalScore").textContent =
+    totalQuestions + "問中 " + score + "問正解！";
+}
+
+function restartQuiz(){
+  document.getElementById("quizBox").style.display = "block";
+  document.getElementById("finalScreen").style.display = "none";
+  startQuiz();
+}
+
+console.log("総問題数:", quizData.length);
+
+startQuiz();
+</script>
+
+</body>
+</html>
